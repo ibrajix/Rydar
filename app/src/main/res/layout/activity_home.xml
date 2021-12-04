@@ -90,7 +90,7 @@
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="24dp"
             android:fontFamily="@font/lato_bold"
             android:text="@string/hello_ibrahim"
             android:textColor="@color/black"
@@ -99,12 +99,12 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.385" />
+            app:layout_constraintVertical_bias="0.283" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout2"
             android:layout_width="0dp"
-            android:layout_height="50dp"
+            android:layout_height="60dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/et_input"
             android:paddingStart="30dp"

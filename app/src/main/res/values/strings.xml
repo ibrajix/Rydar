@@ -12,6 +12,7 @@
     <string name="permission_location_never_ask_again">Permission Never Asked</string>
     <string name="want_better_pickups">Want Better Pickups?</string>
     <string name="share_your_location"><![CDATA[Share your location ->]]></string>
-    <string name="do_you_know_that">Do you know that..?</string>
+    <string name="do_you_know_that">Do you know that…</string>
     <string name="you_are_awesome">You are awesome</string>
+    <string name="current_position">Current Position</string>
 </resources>

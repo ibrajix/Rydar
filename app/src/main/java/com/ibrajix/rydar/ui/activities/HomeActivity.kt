@@ -1,50 +1,38 @@
 package com.ibrajix.rydar.ui.activities
 
 import android.Manifest
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
+import android.content.IntentSender.SendIntentException
 import android.content.pm.PackageManager
 import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.ibrajix.rydar.R
 import com.ibrajix.rydar.databinding.ActivityHomeBinding
-import com.ibrajix.rydar.utils.GeneralUtility.transparentStatusBar
-import permissions.dispatcher.*
-import android.content.IntentSender
-import android.content.IntentSender.SendIntentException
-import android.util.Log
-import androidx.annotation.Nullable
-
-import com.google.android.gms.common.api.ResolvableApiException
-
-import com.google.android.gms.location.LocationSettingsResponse
-
-import com.google.android.gms.location.LocationServices
-
-import com.google.android.gms.location.LocationSettingsRequest
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
+import com.ibrajix.rydar.utils.Constants.LOCATION_REQUEST_INTERVAL
 import com.ibrajix.rydar.utils.Constants.LOCATION_UPDATE_FASTEST_INTERVAL
 import com.ibrajix.rydar.utils.Constants.LOCATION_UPDATE_INTERVAL
 import com.ibrajix.rydar.utils.Constants.REQUEST_CODE_CHECK_SETTINGS
-import java.lang.Exception
-import android.location.LocationManager
-import androidx.core.content.ContextCompat
 import com.ibrajix.rydar.utils.GeneralUtility.isGPSEnabled
+import com.ibrajix.rydar.utils.GeneralUtility.transparentStatusBar
+import permissions.dispatcher.*
 
 
 @RuntimePermissions
@@ -52,8 +40,44 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityHomeBinding
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
+    private lateinit var locationRequest: LocationRequest
     private var lastKnownLocation: Location? = null
+    internal var currentLocationMarker: Marker? = null
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
+    //location call back
+    internal var locationCallback: LocationCallback = object : LocationCallback() {
+
+        override fun onLocationResult(locationResult: LocationResult?) {
+            super.onLocationResult(locationResult)
+            val locationList = locationResult?.locations
+            if (locationList != null) {
+                if (locationList.isNotEmpty()){
+                    //the last location is the most recent or newest
+                    val location = locationList.last()
+                    lastKnownLocation = location
+                    if (currentLocationMarker != null){
+                        currentLocationMarker?.remove()
+                    }
+
+                    //place the current location marker here
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    val markerOptions = MarkerOptions()
+                    markerOptions.position(latLng)
+                    markerOptions.title(getString(R.string.current_position))
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+                    currentLocationMarker = mMap.addMarker(markerOptions)
+
+                    //move map camera
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11.0F))
+
+                }
+            }
+        }
+
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,42 +96,20 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         handleClicks()
 
         checkIfLocationIsTurnedOn()
-    }
-
-    private fun checkIfLocationIsTurnedOn(){
-
-        if (isGPSEnabled(this)){
-
-            //get device location
-            getDeviceLocation()
-
-            //All location services are disabled, //change lyt view
-            binding.txtWantBetterPickups.text = getString(R.string.do_you_know_that)
-            binding.txtShareLocation.text = getString(R.string.you_are_awesome)
-            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_thumbs_up))
-
-        }
-
-        else{
-
-            //All location services are enabled, //change lyt view
-            binding.txtWantBetterPickups.text = resources.getString(R.string.want_better_pickups)
-            binding.txtShareLocation.text = resources.getString(R.string.share_your_location)
-            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_location_point))
-
-        }
 
     }
 
-
-    private fun handleClicks(){
-
-        //on click txt share location
-        binding.txtShareLocation.setOnClickListener {
-            enableLocationSettings()
-        }
-
+    override fun onPause() {
+        super.onPause()
+        //stop location updates when activity is no longer active
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
+
+    override fun onResume() {
+        super.onResume()
+        checkIfLocationIsTurnedOn()
+    }
+
 
     /**
      * Manipulates the map once available.
@@ -121,11 +123,36 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Add a marker in Sydney and move the camera
-        getDeviceLocationWithPermissionCheck()
-        /*val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))*/
+        //init map items
+        locationRequest = LocationRequest()
+        locationRequest.interval = LOCATION_REQUEST_INTERVAL
+        locationRequest.fastestInterval = LOCATION_REQUEST_INTERVAL
+        locationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+
+        //check if permission granted
+        checkIfPermissionGranted()
+
+    }
+
+    private fun checkIfPermissionGranted(){
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+            ){
+                //permission granted, lets go
+                fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+                mMap.isMyLocationEnabled = true
+            }
+            else {
+                //check for permission
+                getDeviceLocationWithPermissionCheck()
+            }
+        } else{
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+            mMap.isMyLocationEnabled = true
+        }
     }
 
     @NeedsPermission(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -134,65 +161,20 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
          * Get the best and most recent location of the device, which may be null in rare
          * cases when a location is not available.
          */
-        try {
-
-            val locationResult = fusedLocationProviderClient.lastLocation
-
-            locationResult.addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    //Set the map's camera position to the current location of the device.
-                    lastKnownLocation = task.result
-                    if (lastKnownLocation != null) {
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                            LatLng(lastKnownLocation!!.latitude,
-                                lastKnownLocation!!.longitude), 15.toFloat()))
-                    }
-                    else{
-                        requestLocation(this)
-                    }
-                } else {
-                    Log.e("tsk", task.exception.toString())
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(35.6892, 51.3890), 15.toFloat()))
-                    mMap.uiSettings?.isMyLocationButtonEnabled = false
-                }
-            }
-        } catch (e: SecurityException) {
-            /*logD("Exception: ${e.message}")*/
-        }
-    }
-
-
-    private fun requestLocation(context: Context) {
-        val mLocationRequest = LocationRequest.create()
-        mLocationRequest.interval = 60000
-        mLocationRequest.fastestInterval = 5000
-        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-
-        val mLocationCallback: LocationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                for (location in locationResult.locations) {
-                    if (location != null && lastKnownLocation == null) {
-                        lastKnownLocation = location
-                    }
-                }
-            }
-        }
 
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            LocationServices.getFusedLocationProviderClient(context)
-                .requestLocationUpdates(mLocationRequest, mLocationCallback, null)
+            //request permission here
+            Toast.makeText(this, getString(R.string.permission_location_denied), Toast.LENGTH_LONG).show()
+            return
         }
-
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+        mMap.isMyLocationEnabled = true
 
     }
-
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -265,7 +247,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         if (REQUEST_CODE_CHECK_SETTINGS == requestCode){
             if (RESULT_OK == resultCode){
                 //user clicked OK, you can startUpdatingLocation(...);
-                getDeviceLocation()
+                checkIfPermissionGranted()
             }
             else{
                 //user clicked cancel: informUserImportanceOfLocationAndPresentRequestAgain();
@@ -274,9 +256,36 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    override fun onResume() {
-        super.onResume()
-        checkIfLocationIsTurnedOn()
+    private fun checkIfLocationIsTurnedOn(){
+
+        if (isGPSEnabled(this)){
+
+            //All location services are disabled, //change lyt view
+            binding.txtWantBetterPickups.text = getString(R.string.do_you_know_that)
+            binding.txtShareLocation.text = getString(R.string.you_are_awesome)
+            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_thumbs_up))
+
+        }
+
+        else{
+
+            //all location services are enabled, //change lyt view
+            binding.txtWantBetterPickups.text = resources.getString(R.string.want_better_pickups)
+            binding.txtShareLocation.text = resources.getString(R.string.share_your_location)
+            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_location_point))
+
+        }
+
+    }
+
+
+    private fun handleClicks(){
+
+        //on click txt share location
+        binding.txtShareLocation.setOnClickListener {
+            enableLocationSettings()
+        }
+
     }
 
 
