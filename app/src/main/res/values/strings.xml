@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Rydar</string>
+    <string name="intro_text_helper">Hop in for an adventurous ride!</string>
+    <string name="get_started">Get Started</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="hello_ibrahim">Hello Ibrahim</string>
+    <string name="where_are_you_going_to">Where are you going to?</string>
+    <string name="button_allow">Allow</string>
+    <string name="button_deny">Deny</string>
+    <string name="permission_camera_rationale">HAHAHHA GRANT US PERMISSION</string>
+    <string name="permission_location_denied">Ooops! We would not be able to get your location</string>
+    <string name="permission_location_never_ask_again">Permission Never Asked</string>
+    <string name="want_better_pickups">Want Better Pickups?</string>
+    <string name="share_your_location"><![CDATA[Share your location ->]]></string>
+    <string name="do_you_know_that">Do you know that..?</string>
+    <string name="you_are_awesome">You are awesome</string>
+</resources>
