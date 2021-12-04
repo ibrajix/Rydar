@@ -4,11 +4,14 @@
         <!-- Status bar color. -->
         <!-- Customize your theme here. -->
         <item name="android:fontFamily">@font/lato_regular</item>
-
-
         <item name="android:windowTranslucentNavigation">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-
-
     </style>
+
+    <!--Style dialog for about me-->
+    <style name="Style_Dialog_Rounded_Corner" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_rounded_corner</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+    </style>
+
 </resources>

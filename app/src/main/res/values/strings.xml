@@ -15,8 +15,15 @@
     <string name="do_you_know_that">Do you know that…</string>
     <string name="you_are_awesome">You are awesome</string>
     <string name="current_position">Your Current Location</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="grant_permission">Permission Needed</string>
     <string name="we_cant_get_your_location">Sorry! We cannot get your location</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="good_day">Good Day!</string>
+    <string name="app_developed_by">This app was developed by Inuwa Ibrahim (ibrajix)</string>
+    <string name="email">Email</string>
+    <string name="twitter">Twitter</string>
+    <string name="where_to">Where to?</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
 </resources>

@@ -9,5 +9,14 @@
         android:id="@+id/homeFragment"
         android:name="com.ibrajix.rydar.ui.fragments.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_inputDestinationFragment"
+            app:destination="@id/inputDestinationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/inputDestinationFragment"
+        android:name="com.ibrajix.rydar.ui.fragments.InputDestinationFragment"
+        android:label="fragment_input_destination"
+        tools:layout="@layout/fragment_input_destination" />
 </navigation>

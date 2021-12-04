@@ -9,4 +9,5 @@
     <color name="main_orange">#FF5722</color>
     <color name="indigo">#0c084c</color>
     <color name="map_color">#3368C3FF</color>
+    <color name="text_color_hint">#B4B4B4</color>
 </resources>

@@ -7,16 +7,24 @@
     tools:context=".ui.fragments.HomeFragment"
     android:layout_height="match_parent">
 
+    <ImageView
+        android:id="@+id/ic_about"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_about"
+        app:layout_constraintEnd_toEndOf="@+id/lyt_permission_denied"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/lyt_permission_denied"
         android:layout_width="0dp"
         android:layout_height="150dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/lyt_rounded"
         android:padding="30dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/ic_about">
 
         <TextView
             android:id="@+id/txt_want_better_pickups"
@@ -92,7 +100,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:fontFamily="@font/lato_bold"
-            android:text="@string/hello_ibrahim"
+            android:text="@string/good_day"
             android:textColor="@color/black"
             android:textSize="25sp"
             android:textStyle="bold"
@@ -102,7 +110,7 @@
             app:layout_constraintVertical_bias="0.283" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayout2"
+            android:id="@+id/et_where_going_to"
             android:layout_width="0dp"
             android:layout_height="60dp"
             android:layout_marginTop="20dp"

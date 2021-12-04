@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +23,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.fragment.findNavController
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -284,10 +287,69 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun handleClicks(){
+
         //on click txt share location
         binding.txtShareLocation.setOnClickListener {
             enableLocationSettings()
         }
+
+        //on click about app
+        binding.icAbout.setOnClickListener {
+            openAlertDialogForAbout()
+        }
+
+        //on click where are you going to
+        binding.etWhereGoingTo.setOnClickListener {
+            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToInputDestinationFragment())
+        }
+
     }
+
+    private fun openAlertDialogForAbout(){
+
+        //show an alert builder
+        val sortView = layoutInflater.inflate(R.layout.lyt_about_app, null)
+
+        val builder : android.app.AlertDialog = android.app.AlertDialog.Builder(
+            requireContext(),
+            R.style.Style_Dialog_Rounded_Corner
+        )
+            .setView(sortView)
+            .create()
+
+        //on click email icon
+        sortView.findViewById<ImageView>(R.id.ic_email).setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW)
+            val data = Uri.parse("mailto:ibrajix@gmail.com?subject=Hey!")
+            intent.data = data
+            startActivity(intent)
+            builder.dismiss()
+        }
+
+        //on click twitter icon
+        sortView.findViewById<ImageView>(R.id.ic_twitter).setOnClickListener {
+            val intent: Intent = try {
+                // Check if the Twitter app is installed on the phone.
+                context?.packageManager?.getPackageInfo("com.twitter.android", 0)
+                Intent(Intent.ACTION_VIEW, Uri.parse("twitter://user?user_id=997129876275593216"))
+            } catch (e: Exception) {
+                Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/ibrajix"))
+            }
+            context?.startActivity(intent)
+            builder.dismiss()
+        }
+
+        //on click web icon
+        sortView.findViewById<ImageView>(R.id.ic_web).setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://linktr.ee/Ibrajix"))
+            startActivity(intent)
+            builder.dismiss()
+        }
+
+        builder.create()
+        builder.show()
+
+    }
+
 
 }
