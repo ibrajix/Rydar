@@ -1,14 +1,21 @@
-package com.ibrajix.rydar.ui.activities
+package com.ibrajix.rydar.ui.fragments
 
 import android.Manifest
+import android.app.Activity.RESULT_OK
 import android.content.Intent
-import android.content.IntentSender.SendIntentException
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -20,34 +27,40 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.ibrajix.rydar.R
-import com.ibrajix.rydar.databinding.ActivityHomeBinding
-import com.ibrajix.rydar.utils.Constants.LOCATION_REQUEST_INTERVAL
-import com.ibrajix.rydar.utils.Constants.LOCATION_UPDATE_FASTEST_INTERVAL
-import com.ibrajix.rydar.utils.Constants.LOCATION_UPDATE_INTERVAL
-import com.ibrajix.rydar.utils.Constants.REQUEST_CODE_CHECK_SETTINGS
-import com.ibrajix.rydar.utils.GeneralUtility.isGPSEnabled
-import com.ibrajix.rydar.utils.GeneralUtility.transparentStatusBar
+import com.ibrajix.rydar.databinding.FragmentHomeBinding
+import com.ibrajix.rydar.utils.Constants
+import com.ibrajix.rydar.utils.GeneralUtility
 import permissions.dispatcher.*
 
-
 @RuntimePermissions
-class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
+class HomeFragment : Fragment(), OnMapReadyCallback {
 
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
+
+    //map variables
     private lateinit var mMap: GoogleMap
-    private lateinit var binding: ActivityHomeBinding
-
     private lateinit var locationRequest: LocationRequest
     private var lastKnownLocation: Location? = null
     internal var currentLocationMarker: Marker? = null
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
+    private val resolutionForResult =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { activityResult ->
+            if (activityResult.resultCode == RESULT_OK){
+                //user clicked OK, you can startUpdatingLocation(...)
+                checkIfPermissionGranted()
+            }
+            else {
+                Toast.makeText(requireContext(), getString(R.string.we_cant_get_your_location), Toast.LENGTH_LONG).show()
+            }
+        }
+
+
     //location call back
-    internal var locationCallback: LocationCallback = object : LocationCallback() {
+    private var locationCallback: LocationCallback = object : LocationCallback() {
 
         override fun onLocationResult(locationResult: LocationResult?) {
             super.onLocationResult(locationResult)
@@ -66,30 +79,38 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                     val markerOptions = MarkerOptions()
                     markerOptions.position(latLng)
                     markerOptions.title(getString(R.string.current_position))
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
                     currentLocationMarker = mMap.addMarker(markerOptions)
 
                     //move map camera
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11.0F))
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0F))
 
                 }
             }
         }
-
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        transparentStatusBar()
+    }
 
-        binding = ActivityHomeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // Inflate the layout for this fragment
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        //init map stuff and also permission
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
+        val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -98,6 +119,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         checkIfLocationIsTurnedOn()
 
     }
+
 
     override fun onPause() {
         super.onPause()
@@ -111,34 +133,35 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
 
         //init map items
+        mMap = googleMap
         locationRequest = LocationRequest()
-        locationRequest.interval = LOCATION_REQUEST_INTERVAL
-        locationRequest.fastestInterval = LOCATION_REQUEST_INTERVAL
+        locationRequest.interval = Constants.LOCATION_REQUEST_INTERVAL
+        locationRequest.fastestInterval = Constants.LOCATION_REQUEST_INTERVAL
         locationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+
+        googleMap.setMapStyle(
+            MapStyleOptions.loadRawResourceStyle(
+                requireContext(), R.raw.map_style
+            )
+        )
 
         //check if permission granted
         checkIfPermissionGranted()
-
     }
 
     private fun checkIfPermissionGranted(){
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
 
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED
             ){
                 //permission granted, lets go
@@ -163,12 +186,12 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
          */
 
         if (ActivityCompat.checkSelfPermission(
-                this,
+                requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             //request permission here
-            Toast.makeText(this, getString(R.string.permission_location_denied), Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), getString(R.string.permission_location_denied), Toast.LENGTH_LONG).show()
             return
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
@@ -192,7 +215,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     fun showRationaleForLocation(request: PermissionRequest) {
         // NOTE: Show a rationale to explain why the permission is needed, e.g. with a dialog.
         // Call proceed() or cancel() on the provided PermissionRequest to continue or abort
-        showRationaleDialog(R.string.permission_camera_rationale, request)
+        showRationaleDialog(R.string.permission_location_rationale, request)
     }
 
     @OnNeverAskAgain(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -201,7 +224,8 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun showRationaleDialog(@StringRes messageResId: Int, request: PermissionRequest) {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.grant_permission)
             .setPositiveButton(R.string.button_allow) { _, _ -> request.proceed() }
             .setNegativeButton(R.string.button_deny) { _, _ -> request.cancel() }
             .setCancelable(false)
@@ -209,84 +233,61 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             .show()
     }
 
-
     private fun enableLocationSettings() {
 
         val locationRequest = LocationRequest.create()
-            .setInterval(LOCATION_UPDATE_INTERVAL)
-            .setFastestInterval(LOCATION_UPDATE_FASTEST_INTERVAL)
+            .setInterval(Constants.LOCATION_UPDATE_INTERVAL)
+            .setFastestInterval(Constants.LOCATION_UPDATE_FASTEST_INTERVAL)
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
         val builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
         LocationServices
-            .getSettingsClient(this)
+            .getSettingsClient(requireContext())
             .checkLocationSettings(builder.build())
             .addOnSuccessListener(
-                this
+                requireActivity()
             ) { response: LocationSettingsResponse? -> }
             .addOnFailureListener(
-                this
+                requireActivity()
             ) { ex: Exception? ->
+
                 if (ex is ResolvableApiException) {
                     // Location settings are NOT satisfied,  but this can be fixed  by showing the user a dialog.
                     try {
                         // Show the dialog by calling startResolutionForResult(),  and check the result in onActivityResult().
-                        ex.startResolutionForResult(
-                            this,
-                            REQUEST_CODE_CHECK_SETTINGS
-                        )
-                    } catch (sendEx: SendIntentException) {
+                        val intentSenderRequest = IntentSenderRequest.Builder(ex.resolution).build()
+                        resolutionForResult.launch(intentSenderRequest)
+
+                    } catch (sendEx: IntentSender.SendIntentException) {
                         // Ignore the error.
                     }
                 }
             }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (REQUEST_CODE_CHECK_SETTINGS == requestCode){
-            if (RESULT_OK == resultCode){
-                //user clicked OK, you can startUpdatingLocation(...);
-                checkIfPermissionGranted()
-            }
-            else{
-                //user clicked cancel: informUserImportanceOfLocationAndPresentRequestAgain();
-            }
-        }
-    }
-
 
     private fun checkIfLocationIsTurnedOn(){
 
-        if (isGPSEnabled(this)){
-
+        if (GeneralUtility.isGPSEnabled(requireContext())){
             //All location services are disabled, //change lyt view
             binding.txtWantBetterPickups.text = getString(R.string.do_you_know_that)
             binding.txtShareLocation.text = getString(R.string.you_are_awesome)
-            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_thumbs_up))
-
+            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_thumbs_up))
         }
 
         else{
-
             //all location services are enabled, //change lyt view
             binding.txtWantBetterPickups.text = resources.getString(R.string.want_better_pickups)
             binding.txtShareLocation.text = resources.getString(R.string.share_your_location)
-            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_location_point))
-
+            binding.icLocation.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_location_point))
         }
-
     }
 
-
     private fun handleClicks(){
-
         //on click txt share location
         binding.txtShareLocation.setOnClickListener {
             enableLocationSettings()
         }
-
     }
-
 
 }

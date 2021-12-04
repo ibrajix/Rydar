@@ -48,7 +48,7 @@ class SplashScreenActivity : AppCompatActivity() {
         activityIntent = if (!PreferenceHelper.hasUserSeenIntro){
             Intent(this, IntroActivity::class.java)
         } else {
-            Intent(this, HomeActivity::class.java)
+            Intent(this, ContainerActivity::class.java)
         }
 
 

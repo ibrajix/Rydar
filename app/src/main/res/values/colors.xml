@@ -8,4 +8,5 @@
     <color name="input_grey">#E8E6E6</color>
     <color name="main_orange">#FF5722</color>
     <color name="indigo">#0c084c</color>
+    <color name="map_color">#3368C3FF</color>
 </resources>

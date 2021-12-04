@@ -10,11 +10,13 @@
         <entry key="app/src/main/res/drawable/ic_location_point.xml" value="0.25925925925925924" />
         <entry key="app/src/main/res/drawable/ic_thumbs_up.xml" value="0.2722222222222222" />
         <entry key="app/src/main/res/drawable/lyt_rounded.xml" value="0.25925925925925924" />
+        <entry key="app/src/main/res/layout/activity_container.xml" value="0.23229166666666667" />
         <entry key="app/src/main/res/layout/activity_home.xml" value="0.165" />
         <entry key="app/src/main/res/layout/activity_intro.xml" value="0.26145833333333335" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.165" />
         <entry key="app/src/main/res/layout/activity_splash_screen.xml" value="0.26145833333333335" />
         <entry key="app/src/main/res/layout/et_input.xml" value="0.26145833333333335" />
+        <entry key="app/src/main/res/layout/fragment_home.xml" value="0.23229166666666667" />
       </map>
     </option>
   </component>

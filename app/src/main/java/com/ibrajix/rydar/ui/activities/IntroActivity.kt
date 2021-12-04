@@ -3,8 +3,6 @@ package com.ibrajix.rydar.ui.activities
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.ibrajix.rydar.R
-import com.ibrajix.rydar.databinding.ActivityHomeBinding
 import com.ibrajix.rydar.databinding.ActivityIntroBinding
 import com.ibrajix.rydar.preference.PreferenceHelper
 import com.ibrajix.rydar.utils.GeneralUtility.transparentStatusBar
@@ -31,7 +29,7 @@ class IntroActivity : AppCompatActivity() {
 
         //on click button get started
         binding.btnGetStarted.setOnClickListener {
-            val intent = Intent(this, HomeActivity::class.java)
+            val intent = Intent(this, ContainerActivity::class.java)
             startActivity(intent)
         }
 

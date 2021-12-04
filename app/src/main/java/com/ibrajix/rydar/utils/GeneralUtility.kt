@@ -11,12 +11,6 @@ import android.provider.Settings.SettingNotFoundException
 import android.os.Build
 import android.location.LocationManager
 
-
-
-
-
-
-
 object GeneralUtility {
 
     //transparent status bar
