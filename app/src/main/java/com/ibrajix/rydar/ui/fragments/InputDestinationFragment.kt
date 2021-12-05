@@ -1,6 +1,7 @@
 package com.ibrajix.rydar.ui.fragments
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -41,15 +42,40 @@ import android.view.inputmethod.EditorInfo
 
 import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
+import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.ibrajix.rydar.data.Resource
+import com.ibrajix.rydar.ui.adapters.SearchLocationAdapter
+import com.ibrajix.rydar.ui.viewmodel.MainViewModel
+import com.ibrajix.rydar.utils.Constants.DELAY_SEARCH_QUERY
+import com.ibrajix.rydar.utils.GeneralUtility
+import com.ibrajix.rydar.utils.GeneralUtility.displaySnackBar
+import com.ibrajix.rydar.utils.GeneralUtility.isNetworkAvailable
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 
+@SuppressLint("MissingPermission")
 @RuntimePermissions
+@AndroidEntryPoint
 class InputDestinationFragment : Fragment(), OnMapReadyCallback {
 
+    private val mainViewModel: MainViewModel by viewModels()
+    private lateinit var searchLocationAdapter: SearchLocationAdapter
     private var _binding: FragmentInputDestinationBinding? = null
     private val binding get() = _binding!!
     var geocoder: Geocoder? = null
     var addresses: List<Address>? = null
+    var job: Job? = null
 
     //map variables
     private lateinit var mMap: GoogleMap
@@ -103,8 +129,11 @@ class InputDestinationFragment : Fragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         handleClicks()
-    }
+        setUpRecyclerView()
+        setUpSearch()
+        setUpObserver()
 
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -120,6 +149,84 @@ class InputDestinationFragment : Fragment(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
     }
+
+    private fun setUpRecyclerView(){
+        searchLocationAdapter = SearchLocationAdapter(SearchLocationAdapter.OnLocationItemClickListener{ article->
+            val action = InputDestinationFragmentDirections.actionInputDestinationFragmentToConfirmDestinationFragment()
+            findNavController().navigate(action)
+        })
+        binding.rcvSearchResult.adapter = searchLocationAdapter
+        binding.rcvSearchResult.addItemDecoration(DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL))
+    }
+
+    private fun setUpObserver(){
+
+       lifecycleScope.launch {
+           repeatOnLifecycle(Lifecycle.State.STARTED) {
+               mainViewModel.searchLocation.collect {
+
+                   when (it.status) {
+                       Resource.Status.SUCCESS -> {
+                           if (it.data?.status == "OK") {
+                               searchLocationAdapter.submitList(it.data.candidates)
+                           } else {
+                               displaySnackBar(
+                                   binding.root,
+                                   "",
+                                   requireContext()
+                               )
+                           }
+                       }
+
+                       Resource.Status.ERROR -> {
+                           //handle error here by showing a snackBar
+                           displaySnackBar(
+                               binding.root,
+                               it.message?:"",
+                               requireContext()
+                           )
+                       }
+
+                       Resource.Status.FAILURE -> {
+                           //handle failure here
+                           displaySnackBar(
+                               binding.root,
+                               it.message?:"",
+                               requireContext()
+                           )
+                       }
+
+                   }
+
+               }
+           }
+       }
+
+    }
+
+    private fun setUpSearch(){
+        binding.etTo.addTextChangedListener { editable->
+            job?.cancel()
+            job = MainScope().launch {
+                delay(DELAY_SEARCH_QUERY)
+            }
+            editable?.let {
+                if (editable.toString().isNotEmpty()){
+                    if (isNetworkAvailable(requireContext())){
+                        mainViewModel.doSearchLocation(editable.toString())
+                    }
+                    else{
+                        displaySnackBar(
+                            binding.root,
+                            resources.getString(R.string.not_connected_to_internet),
+                            requireContext()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
 
     override fun onMapReady(googleMap: GoogleMap) {
 
@@ -219,7 +326,16 @@ class InputDestinationFragment : Fragment(), OnMapReadyCallback {
         //on click search edit text from
         binding.etTo.setOnEditorActionListener(OnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                Toast.makeText(requireContext(), "I will search for location here", Toast.LENGTH_LONG).show()
+                if (isNetworkAvailable(requireContext())){
+                    mainViewModel.doSearchLocation(binding.etTo.text.toString())
+                }
+                else{
+                    displaySnackBar(
+                        binding.root,
+                        resources.getString(R.string.not_connected_to_internet),
+                        requireContext()
+                    )
+                }
                 return@OnEditorActionListener true
             }
             false

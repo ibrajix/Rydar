@@ -18,5 +18,14 @@
         android:id="@+id/inputDestinationFragment"
         android:name="com.ibrajix.rydar.ui.fragments.InputDestinationFragment"
         android:label="fragment_input_destination"
-        tools:layout="@layout/fragment_input_destination" />
+        tools:layout="@layout/fragment_input_destination" >
+        <action
+            android:id="@+id/action_inputDestinationFragment_to_confirmDestinationFragment"
+            app:destination="@id/confirmDestinationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/confirmDestinationFragment"
+        android:name="com.ibrajix.rydar.ui.fragments.ConfirmDestinationFragment"
+        android:label="fragment_confirm_destination"
+        tools:layout="@layout/fragment_confirm_destination" />
 </navigation>

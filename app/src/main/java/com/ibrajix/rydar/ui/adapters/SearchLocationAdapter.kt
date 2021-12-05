@@ -16,8 +16,8 @@ class SearchLocationAdapter(private val onClickListener: OnLocationItemClickList
     class SearchLocationViewHolder private constructor(private val binding: RcvLytLocationResultBinding) : RecyclerView.ViewHolder(binding.root){
 
         fun bind(item: Candidate){
-            /*binding.model = item
-            binding.executePendingBindings()*/
+            binding.txtLocationCity.text = item.formatted_address
+            binding.txtLocationSearched.text = item.name
         }
 
         companion object{

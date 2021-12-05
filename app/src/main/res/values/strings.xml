@@ -17,8 +17,6 @@
     <string name="current_position">Your Current Location</string>
     <string name="grant_permission">Permission Needed</string>
     <string name="we_cant_get_your_location">Sorry! We cannot get your location</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="good_day">Good Day!</string>
     <string name="app_developed_by">This app was developed by Inuwa Ibrahim (ibrajix)</string>
     <string name="email">Email</string>
@@ -26,4 +24,14 @@
     <string name="where_to">Where to?</string>
     <string name="from">From</string>
     <string name="to">To</string>
+    <string name="something_went_wrong">Ooops, something went wrong!</string>
+    <string name="not_connected_to_internet">You are not connected, enable data connection and try again</string>
+    <string name="your_ride">Your Ride</string>
+    <string name="select_your_preferred_ride">Select your preferred ride</string>
+    <string name="normal">Normal</string>
+    <string name="time">10:25pm</string>
+    <string name="price">₦ 1,000</string>
+    <string name="price_premium">₦ 5,000</string>
+    <string name="premium">Premium</string>
+    <string name="confirm">Confirm</string>
 </resources>

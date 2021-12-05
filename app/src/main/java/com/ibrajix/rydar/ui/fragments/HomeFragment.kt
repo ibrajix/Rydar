@@ -40,8 +40,13 @@ import android.location.Geocoder
 import android.util.Log
 import java.io.IOException
 import java.util.*
+import android.Manifest.permission
+import android.annotation.SuppressLint
+
+import com.google.android.gms.tasks.OnCompleteListener
 
 
+@SuppressLint("MissingPermission")
 @RuntimePermissions
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -177,13 +182,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         //check if permission granted
         checkIfPermissionGranted()
+
     }
+
 
     private fun checkIfPermissionGranted(){
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
 
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            if (ContextCompat.checkSelfPermission(requireContext(), permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED
             ){
                 //permission granted, lets go
@@ -215,6 +222,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             Toast.makeText(requireContext(), getString(R.string.permission_location_denied), Toast.LENGTH_LONG).show()
             return
         }
+
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
         mMap.isMyLocationEnabled = true
 
