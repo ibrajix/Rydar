@@ -9,7 +9,7 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
         android:layout_width="0dp"
-        android:layout_height="300dp"
+        android:layout_height="320dp"
         android:layout_gravity="center_horizontal|center_vertical"
         app:cardCornerRadius="12dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -26,8 +26,10 @@
 
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinatorLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <include layout="@layout/fragment_confirm_bottom_dialog_sheet" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
