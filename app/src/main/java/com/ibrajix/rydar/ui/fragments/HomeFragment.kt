@@ -5,12 +5,12 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.location.Address
 import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,9 +20,9 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
@@ -36,12 +36,19 @@ import com.ibrajix.rydar.databinding.FragmentHomeBinding
 import com.ibrajix.rydar.utils.Constants
 import com.ibrajix.rydar.utils.GeneralUtility
 import permissions.dispatcher.*
+import android.location.Geocoder
+import android.util.Log
+import java.io.IOException
+import java.util.*
+
 
 @RuntimePermissions
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    var geocoder: Geocoder? = null
+    var addresses: List<Address>? = null
 
     //map variables
     private lateinit var mMap: GoogleMap
@@ -88,6 +95,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     //move map camera
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0F))
 
+                    //get location text value with geocoder
+                    try {
+                        addresses = geocoder?.getFromLocation(location.latitude, location.longitude, 1)
+                        val address = addresses?.get(0)?.getAddressLine(0)
+                    }
+                    catch (e: IOException){
+                        Log.e("lce", e.toString())
+                    }
+
                 }
             }
         }
@@ -111,6 +127,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         //init map stuff and also permission
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
+
+        geocoder = Geocoder(requireContext(), Locale.getDefault())
+
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = childFragmentManager
@@ -187,7 +206,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
          * Get the best and most recent location of the device, which may be null in rare
          * cases when a location is not available.
          */
-
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION

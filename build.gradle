@@ -10,6 +10,13 @@ buildscript {
 
         //Safe args navigation component
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.5"
+
+        //hilt
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.39.1'
+
+        //just for storing maps api key securely
+        classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.0"
+
     }
 }
 

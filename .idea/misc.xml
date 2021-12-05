@@ -9,6 +9,7 @@
         <entry key="app/src/main/res/drawable/btn_round_main.xml" value="0.27760416666666665" />
         <entry key="app/src/main/res/drawable/dialog_rounded_corner.xml" value="0.2722222222222222" />
         <entry key="app/src/main/res/drawable/et_input.xml" value="0.27314814814814814" />
+        <entry key="app/src/main/res/drawable/et_input_disabled.xml" value="0.26851851851851855" />
         <entry key="app/src/main/res/drawable/ic_about.xml" value="0.2722222222222222" />
         <entry key="app/src/main/res/drawable/ic_gmail.xml" value="0.2722222222222222" />
         <entry key="app/src/main/res/drawable/ic_location_point.xml" value="0.25925925925925924" />
@@ -23,8 +24,9 @@
         <entry key="app/src/main/res/layout/activity_splash_screen.xml" value="0.26145833333333335" />
         <entry key="app/src/main/res/layout/et_input.xml" value="0.26145833333333335" />
         <entry key="app/src/main/res/layout/fragment_home.xml" value="0.23229166666666667" />
-        <entry key="app/src/main/res/layout/fragment_input_destination.xml" value="0.26197916666666665" />
+        <entry key="app/src/main/res/layout/fragment_input_destination.xml" value="0.375" />
         <entry key="app/src/main/res/layout/lyt_about_app.xml" value="0.26197916666666665" />
+        <entry key="app/src/main/res/layout/rcv_lyt_location_result.xml" value="0.26197916666666665" />
       </map>
     </option>
   </component>
