@@ -27,5 +27,9 @@
         android:id="@+id/confirmDestinationFragment"
         android:name="com.ibrajix.rydar.ui.fragments.ConfirmDestinationFragment"
         android:label="fragment_confirm_destination"
-        tools:layout="@layout/fragment_confirm_destination" />
+        tools:layout="@layout/fragment_confirm_destination" >
+        <argument
+            android:name="direction"
+            app:argType="com.ibrajix.rydar.data.LocationDirectionModel" />
+    </fragment>
 </navigation>

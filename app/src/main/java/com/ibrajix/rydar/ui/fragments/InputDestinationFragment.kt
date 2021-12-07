@@ -3,11 +3,9 @@ package com.ibrajix.rydar.ui.fragments
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
-import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
@@ -17,30 +15,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.ibrajix.rydar.R
-import com.ibrajix.rydar.databinding.FragmentHomeBinding
 import com.ibrajix.rydar.databinding.FragmentInputDestinationBinding
 import com.ibrajix.rydar.utils.Constants
 import permissions.dispatcher.*
 import java.io.IOException
 import java.util.*
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 
-import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
@@ -49,12 +42,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.ibrajix.rydar.data.LocationDirectionModel
 import com.ibrajix.rydar.data.Resource
 import com.ibrajix.rydar.ui.adapters.SearchLocationAdapter
 import com.ibrajix.rydar.ui.viewmodel.MainViewModel
 import com.ibrajix.rydar.utils.Constants.DELAY_SEARCH_QUERY
-import com.ibrajix.rydar.utils.GeneralUtility
 import com.ibrajix.rydar.utils.GeneralUtility.displaySnackBar
+import com.ibrajix.rydar.utils.GeneralUtility.hideKeyboard
 import com.ibrajix.rydar.utils.GeneralUtility.isNetworkAvailable
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
@@ -77,6 +71,13 @@ class InputDestinationFragment : Fragment(), OnMapReadyCallback {
     var addresses: List<Address>? = null
     var job: Job? = null
 
+    var fromPoint1: Double? = null
+    var fromPoint2: Double? = null
+    var toPoint1: Double? = null
+    var toPoint2: Double? = null
+    var midPoint1: Double? = null
+    var midPoint2: Double? = null
+
     //map variables
     private lateinit var mMap: GoogleMap
     private lateinit var locationRequest: LocationRequest
@@ -96,6 +97,8 @@ class InputDestinationFragment : Fragment(), OnMapReadyCallback {
                     try {
                         addresses = geocoder?.getFromLocation(location.latitude, location.longitude, 1)
                         val address = addresses?.get(0)?.getAddressLine(0)
+                        fromPoint1 = location.latitude
+                        fromPoint2 = location.longitude
                         val addressFormatted = address.toString().lowercase(Locale.getDefault()).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                         binding.etFrom.setText(addressFormatted)
                     } catch (e: IOException) {
@@ -151,8 +154,15 @@ class InputDestinationFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setUpRecyclerView(){
-        searchLocationAdapter = SearchLocationAdapter(SearchLocationAdapter.OnLocationItemClickListener{ article->
-            val action = InputDestinationFragmentDirections.actionInputDestinationFragmentToConfirmDestinationFragment()
+        searchLocationAdapter = SearchLocationAdapter(SearchLocationAdapter.OnLocationItemClickListener{ destination->
+
+            toPoint1 = destination.geometry.location.lat
+            toPoint2 = destination.geometry.location.lng
+            midPoint1 = destination.geometry.location.lat
+            midPoint2 = destination.geometry.location.lng
+            hideKeyboard(requireActivity())
+            val locationModel = LocationDirectionModel(fromPoint1, fromPoint2, toPoint1, toPoint2, midPoint1, midPoint2)
+            val action = InputDestinationFragmentDirections.actionInputDestinationFragmentToConfirmDestinationFragment(locationModel)
             findNavController().navigate(action)
         })
         binding.rcvSearchResult.adapter = searchLocationAdapter

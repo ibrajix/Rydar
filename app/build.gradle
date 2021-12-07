@@ -5,6 +5,7 @@ plugins {
     id 'androidx.navigation.safeargs.kotlin'
     id 'dagger.hilt.android.plugin'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+    id 'kotlin-android-extensions'
 }
 
 android {
@@ -39,6 +40,11 @@ android {
     buildTypes.each {
         it.buildConfigField 'String', 'SEARCH_API_KEY', SearchApiKey  //--< Delete this whole block, not needed when you have your own API_KEY (I had to hide mine)
     }
+
+    buildTypes.each {
+        it.buildConfigField 'String', 'MAP_DIRECTION_API_KEY', MapDirectionApiKey  //--< Delete this whole block, not needed when you have your own API_KEY (I had to hide mine)
+    }
+
 
     kotlinOptions {
         jvmTarget = '1.8'
@@ -97,5 +103,9 @@ dependencies {
     //lifeCycle
     def lifecycle_version = "2.4.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+
+    //Java client for google maps services
+    implementation 'com.google.maps:google-maps-services:1.0.1'
+    implementation 'org.slf4j:slf4j-simple:1.7.25'
 
 }
